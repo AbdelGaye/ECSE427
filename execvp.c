@@ -13,8 +13,9 @@ int commandNumber = 0;
 struct node *head_job = NULL;
 struct node *current_job = NULL;
 
-
-struct node {
+//Defining nodes to be used in linked lists for jobs
+struct node 
+{
 	int number; // the job number
 	int pid; // the process id of the a specific process
 	struct node *next; // when another process is called you add to the end of the linked list
@@ -22,9 +23,12 @@ struct node {
 };
 
 
-//Initiliaze the args(input) to null once the command has been processed
+//Initialize the args(input) to null once the command has been processed
 // this is to clear it to accept another command in the next while loop
 void initialize(char *args[]);
+
+//Add a job to the list of jobs
+void addToJobList(char *args, int process_pid);
 
 
 int getcmd(char *line, char *args[], int *background)
@@ -62,37 +66,6 @@ void initialize(char *args[]) {
 	return;
 }
 
-/* Add a job to the list of jobs
- */
-void addToJobList(char *args, int process_pid) 
-{
-	struct node *job = malloc(sizeof(struct node));
-
-	job->name = args;
-
-	//If the job list is empty, create a new head
-	if (head_job == NULL) {
-		job->number = 1;
-		job->pid = process_pid;
-
-		//the new head is also the current node
-		job->next = NULL;
-		head_job = job;
-		current_job = head_job;
-	}
-
-	//Otherwise create a new job node and link the current node to it
-	else {
-
-		job->number = current_job->number + 1;
-		job->pid = process_pid;
-
-		current_job->next = job;
-		current_job = job;
-		job->next = NULL;
-	}
-}
-
 //If there is no &, wait for the child process to finish. Else add the process to the job list
 void parentProcess(int pid, char *com, int background)
 {
@@ -122,7 +95,66 @@ void sigintHandler()
 // 	}
 // }
 
-int main(void) {
+//Creating a linked list for handling jobs
+void addToJobList(char *args, int process_pid) 
+{
+	struct node *job = malloc(sizeof(struct node));
+
+	job->name = args;
+
+	//If the job list is empty, create a new head
+	if (head_job == NULL) 
+	{
+		job->number = 1;
+		job->pid = process_pid;
+
+		//the new head is also the current node
+		job->next = NULL;
+		head_job = job;
+		current_job = head_job;
+	}
+
+	//Otherwise create a new job node and link the current node to it
+	else 
+	{
+		job->number = current_job->number + 1;
+		job->pid = process_pid;
+
+		current_job->next = job;
+		current_job = job;
+		job->next = NULL;
+	}
+}
+
+//Takes desired index of the linked list and returns the pid
+int getPid(int index)
+{
+    struct node *current = head_job;
+    int counter = 1;
+    int curr_pid = 0; 
+
+    //Searching through the linked list for the desired node and getting its pid
+    while (current != NULL)
+    {
+       	if (counter == index)
+       	{
+	        curr_pid = current->pid;
+	        break;
+       	}
+       	counter++;
+       	current = current->next;
+    }
+   	
+    if(curr_pid == 0)
+    	printf("There is no job %d.\n", index);
+
+    return curr_pid;        
+}
+
+
+/*------------------------------------------ MAIN CODE -------------------------------------------- */
+int main(void) 
+{
 	char *args[20];
 	int bg;
 
@@ -263,8 +295,10 @@ int main(void) {
 				parentProcess(pid, "cp", bg);
 			}
 		}
+
 		else if (!strcmp("jobs", args[0]))
 		{
+			//Using a linked list
 			struct node *ptr;
 			struct node *previous;
 			ptr = head_job;
@@ -273,15 +307,18 @@ int main(void) {
 			{
 				int status;
 
+				//If we are at the head node
 				if(ptr == head_job)
 				{
+					//If the head node is dead
 					if(waitpid(ptr->pid, &status, WNOHANG) == -1)
 					{
 						head_job = ptr->next;
-						printf("%s with job number %d is done.\n", ptr->name, ptr->number);
+						printf("%s command with job number %d is done.\n", ptr->name, ptr->number);
 						free(ptr);
 						ptr = head_job;
 					}
+					//List it as part of the background processes
 					else
 					{
 						printf("%s\n", ptr->name);
@@ -289,15 +326,18 @@ int main(void) {
 						ptr = ptr->next;
 					}
 				}
+				//If we are at any other node
 				else
 				{
+					//If the node is dead
 					if(waitpid(ptr->pid, &status, WNOHANG) == -1)
 					{
 						previous->next = ptr->next;
-						printf("%s with job number %d is done.\n", ptr->name, ptr->number);
+						printf("%s command with job number %d is done.\n", ptr->name, ptr->number);
 						free(ptr);
 						ptr = previous->next;
 					}
+					//List it as part of the background processes
 					else
 					{
 						printf("%s\n", ptr->name);
@@ -315,10 +355,19 @@ int main(void) {
 				printf("Missing job number.");
 			else
 			{
-				//pid_t cpid;
-				//int jobnum = atoi(args[1]);
-				//Bring the job to the front
-				//waitpid(jobs[cpid].pid, NULL, 0);                       
+				printf("Switching to the process at index %s...\n", args[1]);
+				pid_t newPid = 0;
+				newPid = getPid(atoi(args[1]));
+	
+				if (newPid > 0)
+				{
+					printf("new Foreground Process\n");
+					//Continue the process
+					kill(newPid,SIGCONT); 
+					int status;
+					//Wait for the process to finish
+					waitpid(newPid, &status, 0);
+				}                     
 			}
 		} 
 
@@ -330,7 +379,7 @@ int main(void) {
 			printf("%s is an invalid command.", args[0]);
 		}
 		free(line);
-	}
 
+	}
 
 }
