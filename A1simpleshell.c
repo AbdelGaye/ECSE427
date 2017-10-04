@@ -288,12 +288,13 @@ int main(void)
 			else
 			{
 				printf("Switching to the process at index %s...\n", args[1]);
-				pid_t newPid = 0;
+				pid_t newPid;
 				newPid = getPid(atoi(args[1]));
-	
-				if (newPid > 0)
+
+				//If the job is still running
+				if (newPid != -1)
 				{
-					printf("New foreground process\n");
+					printf("New foreground process with pid %d\n", newPid);
 					//Continue the process
 					kill(newPid, SIGCONT); 
 					int status;
@@ -406,7 +407,8 @@ int getPid(int index)
 {
     struct node *current = head_job;
     int counter = 1;
-    int curr_pid = 0; 
+    int curr_pid = 0;
+   	int status; 
 
     //Searching through the linked list for the desired node and getting its pid
     while (current != NULL)
@@ -419,9 +421,13 @@ int getPid(int index)
        	counter++;
        	current = current->next;
     }
-   	
-    if(curr_pid == 0)
-    	printf("There is no job %d.\n", index);
+
+    //If the current process is finished or it is not in the job list, then the user can't put it in the foreground
+    if(waitpid(curr_pid, &status, WNOHANG) == -1 || curr_pid == 0)
+    {
+		printf("There is no such job.");
+		curr_pid = -1;
+    }
 
     return curr_pid;        
 }
