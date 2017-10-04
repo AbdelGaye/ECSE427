@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 
 /* Abdel Kader Gaye
 NB: Some of the code was provided by the teaching assistants. */
@@ -65,6 +66,9 @@ int main(void)
 	//Taking care of Ctrl+C
 	signal(SIGINT, ctrl_c);
 
+	time_t now;
+	srand((unsigned int) (time(&now)));
+
 	while (1) 
 	{
 		initialize(args);
@@ -101,6 +105,14 @@ int main(void)
 			pid = fork();
 			if (pid == 0)
 			{ 
+				int w,rem;
+				w = rand() % 10;
+				rem=sleep(w);
+				//handles interruption by signal
+				while(rem!=0)
+				{
+					rem=sleep(rem);
+				}
 				execvp(args[0], args);
 			}
 			else 
@@ -168,6 +180,14 @@ int main(void)
 					//Cat command without output redirection
 					else
 					{
+						int w,rem;
+						w = rand() % 10;
+						rem=sleep(w);
+						//handles interruption by signal
+						while(rem!=0)
+						{
+							rem=sleep(rem);
+						}
 						execvp(args[0], args);
 					}
 				}
@@ -191,6 +211,14 @@ int main(void)
 
 				if (pid == 0)
 				{
+					int w,rem;
+					w = rand() % 10;
+					rem=sleep(w);
+					//handles interruption by signal
+					while(rem!=0)
+					{
+						rem=sleep(rem);
+					}
 					execvp(args[0], args);
 				}
 				else
@@ -410,8 +438,11 @@ void ctrl_c()
 	{
 		printf("All processes are dead.");
 		kill(head_job->pid, SIGQUIT);
+		kill(current_job->pid, SIGQUIT);
 		head_job = NULL;
+		current_job=NULL;
 		free(head_job);
+		free(current_job);
 	}
 }
 
