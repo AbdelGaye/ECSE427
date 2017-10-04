@@ -440,15 +440,23 @@ void sigstpHandler()
 
 void ctrl_c()
 {
+
 	if(head_job != NULL)
 	{
 		printf("All processes are dead.");
-		kill(head_job->pid, SIGQUIT);
-		kill(current_job->pid, SIGQUIT);
-		head_job = NULL;
-		current_job=NULL;
+		while(head_job != NULL)
+		{
+			kill(head_job->pid, SIGQUIT);
+			head_job = head_job->next;
+			// kill(current_job->pid, SIGQUIT);
+			// head_job = NULL;
+			// current_job=NULL;
+			// free(head_job);
+			// free(current_job);
+		}
 		free(head_job);
-		free(current_job);
+		
+    
 	}
 }
 
