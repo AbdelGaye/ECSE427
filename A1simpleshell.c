@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -66,6 +65,7 @@ int main(void)
 	//Taking care of Ctrl+C
 	signal(SIGINT, ctrl_c);
 
+	//Provided to delay execution of system calls
 	time_t now;
 	srand((unsigned int) (time(&now)));
 
@@ -319,7 +319,7 @@ int main(void)
 }
 
 
-/*------------------- FUNCTIONS ------------------------------- */
+/*---------------------------------- FUNCTIONS ------------------------------------- */
 
 int getcmd(char *line, char *args[], int *background)
 {
@@ -349,12 +349,14 @@ int getcmd(char *line, char *args[], int *background)
 
 	return i;
 }
+
 void initialize(char *args[]) {
 	for (int i = 0; i < 20; i++) {
 		args[i] = NULL;
 	}
 	return;
 }
+
 
 //If there is no &, wait for the child process to finish. Else add the process to the job list
 void parentProcess(int pid, char *com, int background)
@@ -402,6 +404,7 @@ void addToJobList(char *args, int process_pid)
 	}
 }
 
+
 //Takes desired index of the linked list and returns the pid
 int getPid(int index)
 {
@@ -433,14 +436,15 @@ int getPid(int index)
 }
 
 
+//Handler for ignoring Ctrl+Z
 void sigstpHandler()
 {
     printf(" ");
 }
 
+//Killing every job once Ctrl+C is pressed
 void ctrl_c()
 {
-
 	if(head_job != NULL)
 	{
 		printf("All processes are dead.");
@@ -448,15 +452,8 @@ void ctrl_c()
 		{
 			kill(head_job->pid, SIGQUIT);
 			head_job = head_job->next;
-			// kill(current_job->pid, SIGQUIT);
-			// head_job = NULL;
-			// current_job=NULL;
-			// free(head_job);
-			// free(current_job);
 		}
 		free(head_job);
-		
-    
 	}
 }
 
