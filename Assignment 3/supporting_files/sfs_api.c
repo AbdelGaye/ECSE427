@@ -9,6 +9,8 @@
 #include "disk_emu.h"
 #define LASTNAME_FIRSTNAME_DISK "sfs_disk.disk"
 #define NUM_BLOCKS 1024  //maximum number of data blocks on the disk.
+#define BLOCK_SIZE 1024
+#define NO_OF_INODES 100 //maximum number of inodes
 #define BITMAP_ROW_SIZE (NUM_BLOCKS/8) // this essentially mimcs the number of rows we have in the bitmap. we will have 128 rows. 
 
 /* macros */
@@ -22,8 +24,17 @@
 //initialize all bits to high
 uint8_t free_bit_map[BITMAP_ROW_SIZE] = { [0 ... BITMAP_ROW_SIZE - 1] = UINT8_MAX };
 
-void mksfs(int fresh) {
-	
+void mksfs(int fresh) 
+{
+	if(fresh == 1)
+	{
+
+	}
+
+	else
+	{
+
+	}
 }
 int sfs_getnextfilename(char *fname){
 
